@@ -1,0 +1,11 @@
+import random
+
+def choose_meme(category):
+    meme_list = memes.get(category)
+    if not meme_list:
+        return None
+
+    urls = [m["url"] for m in meme_list]
+    weights = [m["rarity"] for m in meme_list]
+
+    return random.choices(urls, weights=weights, k=1)[0]
