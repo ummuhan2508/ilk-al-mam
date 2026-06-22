@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Görsel Algıla - Öğrenci</title>
+    <style>
+        body { font-family: Arial; max-width: 600px; margin: 40px auto; padding: 20px; }
+        h1 { color: #2563eb; }
+        form { margin: 20px 0; }
+        input[type="file"] { margin-bottom: 10px; }
+        button { background: #2563eb; color: white; border: none; padding: 10px 20px; cursor: pointer; }
+        .yorum { background: #f0f4ff; padding: 15px; border-radius: 8px; margin-top: 20px; }
+        img { max-width: 100%; margin-top: 15px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <h1>Görsel Algıla</h1>
+    <p>Görsel yükle, model Türkçe yorum yapsın.</p>
+
+    <form method="post" enctype="multipart/form-data">
+        <input type="file" name="gorsel" accept="image/*" required><br>
+        <button type="submit">Analiz Et</button>
+    </form>
+
+    {% if yorum %}
+    <div class="yorum">
+        <strong>Türkçe Yorum:</strong><br>
+        {{ yorum }}
+    </div>
+    {% endif %}
+
+    {% if gorsel %}
+    <img src="{{ gorsel }}" alt="Sonuç">
+    {% endif %}
+</body>
+</html>
