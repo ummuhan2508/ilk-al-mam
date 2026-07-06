@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>🎤 Ses Oyunu</title>
+<style>
+*{box-sizing:border-box;font-family:Segoe UI,sans-serif}
+body{margin:0;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;display:flex;justify-content:center;align-items:center;padding:20px}
+.kutu{background:#0f3460;border-radius:16px;padding:28px;max-width:420px;width:100%;text-align:center;box-shadow:0 8px 32px #0006}
+pre{color:#e94560;font-size:11px;line-height:1.2;margin:0 0 16px}
+h1{margin:0 0 8px;font-size:1.6rem}
+p{color:#a8b2d1;margin:8px 0}
+.btn{background:#e94560;border:none;color:#fff;padding:12px 20px;margin:6px;border-radius:8px;cursor:pointer;font-size:1rem}
+.btn:hover{background:#ff6b6b}
+.btn.sec{background:#533483}.btn.sec:hover{background:#6a4c9c}
+.btn.mic{font-size:2rem;padding:20px 28px;border-radius:50%}
+.skor{display:flex;justify-content:space-around;margin:16px 0;font-size:1.1rem}
+.kelime{font-size:2rem;color:#ffd369;margin:20px 0;font-weight:bold}
+#mesaj{min-height:48px;color:#4ecca3}
+.gizli{display:none}
+</style>
+</head>
+<body>
+<div class="kutu">
+<pre>
+ ╔══════════════════╗
+ ║  🎤 SES OYUNU 🎤 ║
+ ╚══════════════════╝
+</pre>
+
+<div id="menu">
+  <h1>Zorluk Seç</h1>
+  <p>Kelimeyi sesli söyle, doğru mu kontrol edelim!<br>3 yanlış = oyun biter 🎯</p>
+  <button class="btn" onclick="basla('kolay')">🟢 Kolay</button>
+  <button class="btn sec" onclick="basla('orta')">🟡 Orta</button>
+  <button class="btn sec" onclick="basla('zor')">🔴 Zor</button>
+</div>
+
+<div id="oyun" class="gizli">
+  <div class="skor"><span>⭐ Skor: <b id="skor">0</b></span><span>💔 Hata: <b id="hata">0</b>/3</span></div>
+  <p>Bu kelimeyi söyle:</p>
+  <div class="kelime" id="kelime">---</div>
+  <button class="btn mic" id="mic" onclick="dinle()">🎙️</button>
+  <p id="durum">Mikrofona bas ve konuş</p>
+  <div id="mesaj"></div>
+</div>
+
+<div id="son" class="gizli">
+  <h1>🏁 Oyun Bitti!</h1>
+  <p id="sonuc"></p>
+  <button class="btn" onclick="location.reload()">🔄 Tekrar Oyna</button>
+</div>
+</div>
+
+<script>
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec;
+
+async function basla(seviye) {
+  const r = await fetch('/basla', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({seviye})});
+  const d = await r.json();
+  document.getElementById('menu').classList.add('gizli');
+  document.getElementById('oyun').classList.remove('gizli');
+  document.getElementById('kelime').textContent = d.kelime;
+  document.getElementById('skor').textContent = d.skor;
+  document.getElementById('hata').textContent = d.hata;
+}
+
+function dinle() {
+  if (!SR) { alert('Tarayıcın konuşma tanımayı desteklemiyor. Chrome kullan!'); return; }
+  rec = new SR();
+  rec.lang = 'tr-TR';
+  rec.interimResults = false;
+  document.getElementById('durum').textContent = '🔴 Dinleniyor...';
+  rec.onresult = async e => {
+    const metin = e.results[0][0].transcript.toLowerCase().trim(); // yazıya dök + küçük harf
+    document.getElementById('durum').textContent = 'Senin söylediğin: ' + metin;
+    const r = await fetch('/kontrol', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({metin})});
+    const d = await r.json();
+    document.getElementById('mesaj').textContent = d.mesaj;
+    document.getElementById('skor').textContent = d.skor;
+    document.getElementById('hata').textContent = d.hata;
+    if (d.bitti) {
+      document.getElementById('oyun').classList.add('gizli');
+      document.getElementById('son').classList.remove('gizli');
+      document.getElementById('sonuc').textContent = `⭐ Skorun: ${d.skor} | 💔 Hata: ${d.hata}/3`;
+    } else {
+      document.getElementById('kelime').textContent = d.kelime;
+    }
+  };
+  rec.onerror = () => document.getElementById('durum').textContent = '⚠️ Mikrofon hatası, tekrar dene';
+  rec.start();
+}
+</script>
+</body>
+</html>
